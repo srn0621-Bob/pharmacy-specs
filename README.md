@@ -8,19 +8,32 @@
 
 ```
 pharmacy-specs/
-├── backend/              # 后端相关规范
-│   ├── api/             # API 接口集成
-│   ├── webhook/         # Webhook 回调
-│   └── optimization/    # 性能优化
-├── frontend/            # 前端相关规范
-│   ├── patient/         # 患者端
-│   └── doctor/          # 医生端
-├── integration/         # 第三方集成
-│   ├── pharmacy/        # 药房系统
-│   └── logistics/       # 物流系统
+├── backend/              # 后端 API 规范 (13 个)
+│   ├── Phase 1: 基础设施 (2 个)
+│   ├── Phase 2: 药品浏览 (3 个)
+│   ├── Phase 3: 购物车 (2 个)
+│   ├── Phase 4: 订单管理 (3 个)
+│   ├── Phase 5: 物流 (1 个)
+│   └── Phase 6: 优化 (2 个)
+├── frontend/            # 前端 UI 规范 (13 个)
+│   ├── 综合项目 (2 个)
+│   └── UI 分阶段实现 (11 个)
+├── integration/         # 第三方集成规范 (10 个)
+│   ├── 药房系统集成 (3 个)
+│   ├── 处方审核 (1 个)
+│   ├── 物流集成 (3 个)
+│   └── API 审计与映射 (3 个)
 ├── templates/           # 规范模板
-└── archive/             # 已完成项目归档
+└── SPECS_INDEX.md       # 📋 完整规范索引
 ```
+
+**📋 查看完整规范索引**: [SPECS_INDEX.md](SPECS_INDEX.md)
+
+### 分类导航
+
+- [后端 API 规范](backend/README.md) - 13 个规范
+- [前端 UI 规范](frontend/README.md) - 13 个规范
+- [第三方集成规范](integration/README.md) - 10 个规范
 
 ## 规范文档标准结构
 
