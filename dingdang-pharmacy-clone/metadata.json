@@ -1,0 +1,7 @@
+{
+  "name": "DingDang Pharmacy Clone",
+  "description": "A high-fidelity mobile-first pharmacy application featuring home, product details, cart, and checkout screens with medical-grade aesthetics.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

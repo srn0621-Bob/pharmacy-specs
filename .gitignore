@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 忽略子项目的.git目录
 mshlwyy_patient-mall/.git/
 internet-hospital-mall/.git/
@@ -19,3 +20,48 @@ internet-hospital-mall/.git/
 *.tmp
 *.bak
 *~
+=======
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器和 IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# 临时文件
+*.tmp
+*.bak
+*.log
+*.cache
+
+# 敏感信息（如果有）
+*secret*
+*password*
+*credential*
+.env
+.env.local
+
+# 构建产物（如果有工具生成）
+dist/
+build/
+out/
+target/
+
+# Node modules（如果使用文档工具）
+node_modules/
+package-lock.json
+yarn.lock
+
+# 个人笔记
+NOTES.md
+TODO.md
+DRAFT_*.md
+>>>>>>> 1e292842d0ecfe79259d1a5106d92bdcb7f3e2e4
