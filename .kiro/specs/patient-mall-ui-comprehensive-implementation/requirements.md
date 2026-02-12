@@ -1,362 +1,310 @@
-# 需求文档: 患者端药品商城UI综合实施
+# 患者端药品商城UI实现需求分析
 
-> **文档版本**: v1.0  
-> **创建时间**: 2026-01-30  
-> **基于**: patient-pharmacy-ui-migration + patient-mall-ui-redesign-implementation
+## 引言
 
-## 介绍
-
-本需求文档综合了 `patient-pharmacy-ui-migration` 的功能迁移需求和 `patient-mall-ui-redesign-implementation` 的UI重构需求,旨在一次性完成从dingdang-pharmacy到Android患者端的完整迁移,同时确保高度的视觉一致性(目标75-80%)。
-
-### 背景
-
-- **功能基础**: dingdang-pharmacy React Web应用包含完整的药品商城功能
-- **后端就绪**: 13个后端API spec已完成设计和实现
-- **现有应用**: mshlwyy_patient Android应用需要集成药品商城模块
-- **视觉标准**: 以dingdang-pharmacy为参考,实现高度视觉一致性
-
-### 目标
-
-1. **功能完整性**: 实现所有核心购物流程(浏览、搜索、购物车、结算)
-2. **视觉一致性**: 达到75-80%的视觉一致性评分
-3. **性能优化**: 页面加载<2秒,动画帧率≥55fps
-4. **代码质量**: 清晰的架构,可维护的代码,完整的注释
+本文档基于药品商城APP的UI设计图，分析所需的后端API接口，并检查现有后端实现是否满足对接要求。
 
 ## 术语表
 
-- **System**: 患者端商城Android应用
-- **dingdang-pharmacy**: React Web版本的慈贞商城(参考标准)
-- **MVP架构**: Model-View-Presenter架构模式
-- **翠绿色主题**: 使用#10b981作为品牌主色调
-- **Pill形状**: 圆角半径为9999dp的完全圆角设计
-- **DingdangTagView**: 自定义标签组件
-- **DingdangCheckBox**: 自定义圆形选中组件
-- **固定Header**: 固定在页面顶部的翠绿色导航栏
-- **视觉一致性**: Android实现与dingdang-pharmacy在视觉呈现上的相似程度
+- **患者端系统 (Patient System)**: 面向患者用户的移动应用系统
+- **药品商城 (Drug Mall)**: 在线药品购买平台
+- **购物车 (Shopping Cart)**: 用户临时存放待购药品的容器
+- **订单系统 (Order System)**: 处理药品订单创建、支付、物流的系统
+- **搜索引擎 (Search Engine)**: 药品搜索和筛选功能模块
+- **分类系统 (Category System)**: 药品分类管理模块
 
-## 需求
+## 需求分析
 
-### 需求 1: 视觉基础系统建立
+### 需求 1: 首页展示
 
-**用户故事:** 作为开发者,我希望建立完整的视觉基础系统,以便后续页面开发保持一致性
+**用户故事**: 作为患者用户，我想要在首页看到药品分类、热门药品和推荐内容，以便快速找到需要的药品。
 
 #### 验收标准
 
-1. WHEN 系统初始化资源 THEN 系统 SHALL 创建colors_dingdang.xml、dimens_dingdang.xml、styles_dingdang.xml
-2. WHEN 系统定义主题色 THEN 系统 SHALL 使用翠绿色#10b981作为primary颜色
-3. WHEN 系统定义圆角 THEN 系统 SHALL 包含tiny(3dp)、small(6dp)、medium(8dp)、large(12dp)、xlarge(16dp)、xxlarge(24dp)、pill(9999dp)
-4. WHEN 系统定义标签颜色 THEN 系统 SHALL 包含快递送(橙色)、自营(绿边)、促销(绿色)、赠品(橙边)
-5. WHEN 系统定义按钮样式 THEN 系统 SHALL 使用pill形状和翠绿色渐变
-6. WHEN 系统定义文字样式 THEN 系统 SHALL 包含标题、正文、价格等样式
+1. WHEN 用户打开药品商城首页 THEN 患者端系统 SHALL 显示顶部搜索栏
+2. WHEN 用户查看首页 THEN 患者端系统 SHALL 显示快捷分类入口（至少8-10个常用分类）
+3. WHEN 用户查看首页 THEN 患者端系统 SHALL 显示热门药品列表（包含药品图片、名称、规格、价格）
+4. WHEN 用户查看首页 THEN 患者端系统 SHALL 显示推荐药品网格布局（2列展示）
+5. WHEN 用户滚动首页 THEN 患者端系统 SHALL 支持分页加载更多药品
 
-### 需求 2: 自定义组件实现
+### 需求 2: 药品搜索
 
-**用户故事:** 作为开发者,我希望实现可复用的自定义组件,以便在多个页面中保持一致的视觉效果
-
-#### 验收标准
-
-1. WHEN 系统创建DingdangTagView THEN 系统 SHALL 支持EXPRESS、SELF_OPERATED、PROMO、GIFT四种类型
-2. WHEN 标签类型为EXPRESS THEN 系统 SHALL 显示橙色背景(#fed7aa)和橙色文字(#ea580c)
-3. WHEN 标签类型为SELF_OPERATED THEN 系统 SHALL 显示白色背景和翠绿色边框
-4. WHEN 标签类型为PROMO THEN 系统 SHALL 显示绿色背景(#d1fae5)和绿色文字(#059669)
-5. WHEN 系统创建DingdangCheckBox THEN 系统 SHALL 实现圆形选中组件
-6. WHEN 用户点击DingdangCheckBox THEN 系统 SHALL 播放200ms的填充动画
-7. WHEN DingdangCheckBox选中 THEN 系统 SHALL 显示翠绿色圆形背景和白色对勾
-8. WHEN DingdangCheckBox未选中 THEN 系统 SHALL 显示白色圆形边框
-
-### 需求 3: 商城首页实现
-
-**用户故事:** 作为患者,我希望浏览药品商城首页,以便快速找到需要的药品
+**用户故事**: 作为患者用户，我想要搜索药品，以便快速找到我需要的特定药品。
 
 #### 验收标准
 
-1. WHEN 用户打开药品商城 THEN 系统 SHALL 显示固定的翠绿色Header
-2. WHEN Header显示 THEN 系统 SHALL 包含"慈贞商城"标题、副标题、搜索框、热门标签
-3. WHEN 搜索框显示 THEN 系统 SHALL 使用pill形状(9999dp圆角)和白色背景
-4. WHEN 热门标签显示 THEN 系统 SHALL 支持横向滚动
-5. WHEN 首页加载 THEN 系统 SHALL 显示轮播图(180dp高度,16dp圆角)
-6. WHEN 首页显示分类导航 THEN 系统 SHALL 使用CardView包裹,16dp圆角
-7. WHEN 首页显示分类图标 THEN 系统 SHALL 实现彩色圆形背景
-8. WHEN 首页显示热销药品 THEN 系统 SHALL 使用横向RecyclerView
-9. WHEN 首页显示推荐药品 THEN 系统 SHALL 使用网格RecyclerView(2列)
-10. WHEN 首页显示药品卡片 THEN 系统 SHALL 使用16dp圆角和DingdangTagView标签
-11. WHEN 首页显示价格 THEN 系统 SHALL 使用翠绿色
-12. WHEN 用户下拉刷新 THEN 系统 SHALL 重新加载首页数据
-13. WHEN 用户点击药品卡片 THEN 系统 SHALL 跳转到药品详情页
-14. WHEN 用户点击分类 THEN 系统 SHALL 跳转到该分类的药品列表
+1. WHEN 用户点击搜索框 THEN 患者端系统 SHALL 显示搜索历史记录
+2. WHEN 用户点击搜索框 THEN 患者端系统 SHALL 显示热门搜索关键词
+3. WHEN 用户输入搜索关键词 THEN 患者端系统 SHALL 实时返回匹配的药品列表
+4. WHEN 用户提交搜索 THEN 患者端系统 SHALL 保存搜索历史
+5. WHEN 用户查看搜索结果 THEN 患者端系统 SHALL 支持按价格、销量排序
+6. WHEN 用户清空搜索历史 THEN 患者端系统 SHALL 删除该用户的所有搜索记录
 
-### 需求 4: 药品详情页实现
+### 需求 3: 药品分类浏览
 
-**用户故事:** 作为患者,我希望查看药品的详细信息,以便了解药品并决定是否购买
+**用户故事**: 作为患者用户，我想要按分类浏览药品，以便在特定类别中查找药品。
 
 #### 验收标准
 
-1. WHEN 用户打开药品详情页 THEN 系统 SHALL 显示药品的完整信息
-2. WHEN 详情页显示图片 THEN 系统 SHALL 使用轮播图,支持滑动切换
-3. WHEN 详情页显示促销标签 THEN 系统 SHALL 使用HorizontalScrollView横向滚动
-4. WHEN 促销标签显示 THEN 系统 SHALL 使用DingdangTagView(PROMO类型)
-5. WHEN 详情页显示用药指导 THEN 系统 SHALL 创建灰色背景卡片(#f5f5f5)
-6. WHEN 用药指导显示 THEN 系统 SHALL 包含"功能主治"和"用法用量"字段
-7. WHEN 详情页显示限购说明 THEN 系统 SHALL 使用绿色背景(#d1fae5)和8dp圆角
-8. WHEN 详情页显示店铺信息 THEN 系统 SHALL 创建独立的店铺信息卡片
-9. WHEN 店铺信息显示 THEN 系统 SHALL 包含店铺图标、名称、包邮提示
-10. WHEN 用户点击"加入购物车" THEN 系统 SHALL 将药品添加到购物车
-11. WHEN 添加成功 THEN 系统 SHALL 显示底部弹出Dialog
-12. WHEN 成功弹窗显示 THEN 系统 SHALL 包含推荐商品网格(3列)和"去结算"按钮
-13. WHEN 用户点击"立即购买" THEN 系统 SHALL 跳转到结算页面
-14. WHEN 详情页显示相关推荐 THEN 系统 SHALL 展示同类或相关药品
+1. WHEN 用户点击分类入口 THEN 患者端系统 SHALL 显示完整的药品分类列表
+2. WHEN 用户选择某个分类 THEN 患者端系统 SHALL 显示该分类下的所有药品
+3. WHEN 用户查看分类药品 THEN 患者端系统 SHALL 支持按销量、价格、时间排序
+4. WHEN 用户查看分类药品 THEN 患者端系统 SHALL 支持分页加载
+5. WHERE 首页快捷分类 THEN 患者端系统 SHALL 返回前10个热门分类
 
-### 需求 5: 购物车页面实现
+### 需求 4: 药品详情查看
 
-**用户故事:** 作为患者,我希望管理购物车中的药品,以便调整购买数量或删除不需要的药品
+**用户故事**: 作为患者用户，我想要查看药品的详细信息，以便了解药品的功效、用法和注意事项。
 
 #### 验收标准
 
-1. WHEN 用户打开购物车 THEN 系统 SHALL 显示购物车中的所有药品
-2. WHEN 购物车显示商品 THEN 系统 SHALL 显示店铺信息栏
-3. WHEN 店铺信息栏显示 THEN 系统 SHALL 包含DingdangCheckBox、"商城"标签、"自营"标签、店铺名称
-4. WHEN 店铺信息栏显示 THEN 系统 SHALL 包含包邮提示(如"满48元包邮, 快递送")
-5. WHEN 购物车有活动 THEN 系统 SHALL 显示活动提示栏(绿色背景)
-6. WHEN 活动提示栏显示 THEN 系统 SHALL 包含活动文案和"查看更多"链接
-7. WHEN 购物车显示商品 THEN 系统 SHALL 使用DingdangCheckBox替换标准CheckBox
-8. WHEN 购物车显示价格 THEN 系统 SHALL 在价格下方显示预估到手价(绿色标签)
-9. WHEN 用户选中/取消选中商品 THEN 系统 SHALL 更新总价计算
-10. WHEN 用户点击"全选" THEN 系统 SHALL 选中所有商品
-11. WHEN 用户增加/减少数量 THEN 系统 SHALL 更新该商品数量和总价
-12. WHEN 用户删除商品 THEN 系统 SHALL 从购物车移除该商品
-13. WHEN 购物车底部 THEN 系统 SHALL 显示常买常逛区域
-14. WHEN 常买常逛区域显示 THEN 系统 SHALL 使用网格RecyclerView(2列)
-15. WHEN 用户点击"结算" THEN 系统 SHALL 跳转到结算页面
-16. WHEN 购物车为空 THEN 系统 SHALL 显示空状态提示和"去逛逛"按钮
+1. WHEN 用户点击药品 THEN 患者端系统 SHALL 显示药品详情页面
+2. WHEN 用户查看药品详情 THEN 患者端系统 SHALL 显示药品图片、名称、规格、价格、库存
+3. WHEN 用户查看药品详情 THEN 患者端系统 SHALL 显示药品说明（功效、用法、注意事项）
+4. WHEN 用户查看药品详情 THEN 患者端系统 SHALL 显示相关推荐药品（至少6个）
+5. WHEN 用户在详情页 THEN 患者端系统 SHALL 提供加入购物车和立即购买按钮
 
-### 需求 6: 结算页面实现
+### 需求 5: 购物车管理
 
-**用户故事:** 作为患者,我希望确认订单信息并完成支付,以便购买药品
+**用户故事**: 作为患者用户，我想要管理购物车中的药品，以便批量购买或调整购买数量。
 
 #### 验收标准
 
-1. WHEN 用户打开结算页 THEN 系统 SHALL 显示订单信息和收货地址
-2. WHEN 结算页加载 THEN 系统 SHALL 显示商品列表、收货地址、运费、总价
-3. WHEN 用户点击"选择地址" THEN 系统 SHALL 跳转到地址选择页面
-4. WHEN 用户选择地址后返回 THEN 系统 SHALL 更新显示的收货地址
-5. WHEN 用户点击"提交订单" THEN 系统 SHALL 创建订单并跳转到支付页面
-6. WHEN 订单创建失败 THEN 系统 SHALL 显示错误提示
-7. WHEN 用户点击返回 THEN 系统 SHALL 返回购物车页面
+1. WHEN 用户添加药品到购物车 THEN 患者端系统 SHALL 保存药品信息和数量
+2. WHEN 用户打开购物车 THEN 患者端系统 SHALL 显示所有已添加的药品列表
+3. WHEN 用户查看购物车 THEN 患者端系统 SHALL 显示每个药品的图片、名称、规格、单价、数量、小计
+4. WHEN 用户修改数量 THEN 患者端系统 SHALL 更新购物车并重新计算总价
+5. WHEN 用户删除药品 THEN 患者端系统 SHALL 从购物车中移除该药品
+6. WHEN 用户选中/取消选中药品 THEN 患者端系统 SHALL 更新选中状态并重新计算总价
+7. WHEN 用户全选/取消全选 THEN 患者端系统 SHALL 更新所有药品的选中状态
+8. WHEN 用户查看购物车底部 THEN 患者端系统 SHALL 显示已选商品数量和总价
+9. WHEN 用户点击结算 THEN 患者端系统 SHALL 验证选中药品并跳转到订单确认页面
+10. WHEN 购物车为空 THEN 患者端系统 SHALL 显示空状态提示
 
-### 需求 7: 药品搜索实现
+### 需求 6: 订单创建
 
-**用户故事:** 作为患者,我希望搜索药品,以便快速找到需要的药品
-
-#### 验收标准
-
-1. WHEN 用户点击搜索框 THEN 系统 SHALL 跳转到搜索页面
-2. WHEN 搜索页加载 THEN 系统 SHALL 显示搜索历史和热门搜索
-3. WHEN 用户输入关键词 THEN 系统 SHALL 实时显示搜索建议
-4. WHEN 用户提交搜索 THEN 系统 SHALL 显示搜索结果列表
-5. WHEN 搜索结果为空 THEN 系统 SHALL 显示"暂无结果"和推荐药品
-6. WHEN 用户点击搜索历史 THEN 系统 SHALL 自动填充并搜索
-7. WHEN 用户清空搜索历史 THEN 系统 SHALL 删除所有历史记录
-
-### 需求 8: 药品分类实现
-
-**用户故事:** 作为患者,我希望按分类浏览药品,以便找到特定类别的药品
+**用户故事**: 作为患者用户，我想要创建订单，以便购买选中的药品。
 
 #### 验收标准
 
-1. WHEN 用户打开分类页 THEN 系统 SHALL 显示所有药品分类
-2. WHEN 用户选择分类 THEN 系统 SHALL 显示该分类下的药品列表
-3. WHEN 分类列表支持滚动 THEN 系统 SHALL 实现分页加载
-4. WHEN 用户点击药品 THEN 系统 SHALL 跳转到药品详情页
-5. WHEN 分类数据加载失败 THEN 系统 SHALL 显示错误提示
+1. WHEN 用户点击结算 THEN 患者端系统 SHALL 显示订单确认页面
+2. WHEN 用户查看订单确认页 THEN 患者端系统 SHALL 显示收货地址信息
+3. WHEN 用户查看订单确认页 THEN 患者端系统 SHALL 显示药品清单和价格明细
+4. WHEN 用户提交订单 THEN 患者端系统 SHALL 创建订单并返回订单号
+5. WHEN 订单创建成功 THEN 患者端系统 SHALL 清空购物车中已购买的药品
+6. IF 用户未设置收货地址 THEN 患者端系统 SHALL 提示用户添加收货地址
 
-### 需求 9: 底部导航栏实现
+### 需求 7: 订单查询
 
-**用户故事:** 作为患者,我希望通过底部导航快速切换功能模块,以便方便地使用不同功能
-
-#### 验收标准
-
-1. WHEN 药品商城模块激活 THEN 系统 SHALL 在底部显示导航栏
-2. WHEN 导航栏显示 THEN 系统 SHALL 包含"首页"、"分类"、"购物车"、"我的"四个标签
-3. WHEN 用户点击标签 THEN 系统 SHALL 切换到对应页面
-4. WHEN 当前页面对应的标签 THEN 系统 SHALL 高亮显示(翠绿色)
-5. WHEN 购物车有商品 THEN 系统 SHALL 在购物车标签显示数量角标
-
-### 需求 10: 交互动画实现
-
-**用户故事:** 作为用户,我希望看到流畅的交互动画,以便获得更好的使用体验
+**用户故事**: 作为患者用户，我想要查看我的订单列表和订单详情，以便跟踪订单状态。
 
 #### 验收标准
 
-1. WHEN 用户点击按钮 THEN 系统 SHALL 播放缩放动画(scale 0.95, 100ms)
-2. WHEN 用户点击按钮 THEN 系统 SHALL 显示涟漪效果(ripple)
-3. WHEN Activity切换 THEN 系统 SHALL 播放淡入淡出动画
-4. WHEN Fragment切换 THEN 系统 SHALL 播放滑动动画
-5. WHEN 用户下拉刷新 THEN 系统 SHALL 显示翠绿色刷新动画
-6. WHEN 列表加载更多 THEN 系统 SHALL 显示加载动画
-7. WHEN 所有动画播放 THEN 系统 SHALL 使用ease-in-out缓动曲线
-8. WHEN 所有动画播放 THEN 系统 SHALL 保持流畅(>=55fps)
-9. WHEN 低端设备检测 THEN 系统 SHALL 提供动画降级方案
+1. WHEN 用户打开订单列表 THEN 患者端系统 SHALL 显示该用户的所有订单
+2. WHEN 用户查看订单列表 THEN 患者端系统 SHALL 显示订单号、状态、药品信息、总价、创建时间
+3. WHEN 用户点击订单 THEN 患者端系统 SHALL 显示订单详情页面
+4. WHEN 用户查看订单详情 THEN 患者端系统 SHALL 显示完整的订单信息和物流信息
+5. WHERE 订单状态筛选 THEN 患者端系统 SHALL 支持按状态筛选订单（全部、待支付、待发货、待收货、已完成）
 
-## 非功能性需求
+### 需求 8: 药品列表展示
 
-### 性能需求
+**用户故事**: 作为患者用户，我想要看到统一格式的药品列表，以便快速浏览和比较药品。
 
-1. **页面加载时间**: 首页首次加载时间 < 2秒
-2. **页面切换**: 页面切换动画流畅,无卡顿
-3. **图片加载**: 使用 Glide 实现图片懒加载和缓存
-4. **列表滚动**: RecyclerView 滚动流畅,帧率 > 50fps
-5. **自定义组件绘制**: 单次绘制时间 ≤ 16ms
-6. **动画流畅度**: 所有动画帧率 ≥ 55fps
-7. **内存占用**: UI重构后内存增长 ≤ 10%
+#### 验收标准
 
-### UI/UX 需求
+1. WHEN 患者端系统显示药品列表 THEN 每个药品项 SHALL 包含药品图片
+2. WHEN 患者端系统显示药品列表 THEN 每个药品项 SHALL 包含药品名称
+3. WHEN 患者端系统显示药品列表 THEN 每个药品项 SHALL 包含药品规格
+4. WHEN 患者端系统显示药品列表 THEN 每个药品项 SHALL 包含药品价格（显著标识）
+5. WHEN 患者端系统显示药品列表 THEN 每个药品项 SHALL 包含销量或评价信息
+6. WHERE 药品列表布局 THEN 患者端系统 SHALL 支持网格布局（2列）和列表布局切换
 
-1. **视觉一致性**: 与dingdang-pharmacy达到75-80%的视觉一致性
-2. **主题色系统**: 使用翠绿色#10b981作为品牌主色调
-3. **圆角系统**: 遵循3dp-9999dp的圆角规范
-4. **Material Design**: 遵循 Material Design 设计规范
-5. **响应式**: 适配不同屏幕尺寸和分辨率
-6. **无障碍**: 支持 TalkBack 等无障碍功能
+### 需求 9: 购物车数量徽章
 
-### 兼容性需求
+**用户故事**: 作为患者用户，我想要在购物车图标上看到商品数量，以便知道购物车中有多少商品。
 
-1. **Android 版本**: 支持 Android 4.4+ (API 19+)
-2. **屏幕适配**: 支持 4.0-7.0 寸屏幕
-3. **分辨率**: 支持 hdpi、xhdpi、xxhdpi、xxxhdpi
-4. **低端设备**: 提供动画降级方案
+#### 验收标准
 
-### 安全需求
+1. WHEN 用户添加药品到购物车 THEN 患者端系统 SHALL 更新购物车图标上的数量徽章
+2. WHEN 用户删除购物车中的药品 THEN 患者端系统 SHALL 更新购物车图标上的数量徽章
+3. WHEN 购物车为空 THEN 患者端系统 SHALL 隐藏数量徽章
+4. WHEN 用户打开任意页面 THEN 患者端系统 SHALL 显示当前购物车的商品数量
 
-1. **数据传输**: 所有 API 请求使用 HTTPS
-2. **用户认证**: 使用 Token 进行身份验证
-3. **敏感信息**: 不在本地明文存储敏感信息
+### 需求 10: 图片加载优化
 
-### 可维护性需求
+**用户故事**: 作为患者用户，我想要快速看到药品图片，以便流畅地浏览药品。
 
-1. **资源组织**: 创建独立的dingdang资源文件(colors_dingdang.xml、dimens_dingdang.xml、styles_dingdang.xml)
-2. **组件复用**: 自定义组件(DingdangTagView、DingdangCheckBox)可在多个页面复用
-3. **代码注释**: 所有自定义组件和关键逻辑使用中文注释
-4. **命名规范**: 所有dingdang相关资源使用`dingdang_`前缀
-5. **架构清晰**: 使用MVP架构模式,职责分明
+#### 验收标准
 
-## 约束条件
+1. WHEN 患者端系统加载药品图片 THEN 系统 SHALL 使用缩略图优先加载
+2. WHEN 药品图片加载失败 THEN 患者端系统 SHALL 显示默认占位图
+3. WHEN 用户滚动列表 THEN 患者端系统 SHALL 使用懒加载技术加载可见区域的图片
+4. WHEN 用户查看药品详情 THEN 患者端系统 SHALL 加载高清大图
+5. WHERE 图片缓存 THEN 患者端系统 SHALL 缓存已加载的图片以提高性能
 
-### 技术约束
+## API需求映射
 
-1. **开发语言**: 使用 Java (与现有代码保持一致)
-2. **最低 SDK**: minSdkVersion 19 (Android 4.4)
-3. **目标 SDK**: targetSdkVersion 28 (Android 9.0)
-4. **架构模式**: MVP (Model-View-Presenter)
-5. **网络框架**: 使用 Retrofit 2.2.0 + OkHttp 3.10.0
-6. **响应式编程**: RxJava 2.1.7 + RxAndroid 2.0.1
-7. **视图绑定**: ButterKnife 8.8.1
-8. **图片加载**: 使用 Glide 4.12.0
-9. **列表组件**: RecyclerView + BaseRecyclerViewAdapterHelper 2.9.50
+### 首页相关API
 
-### 设计约束
+| API端点 | 方法 | 功能 | 对应需求 | 实现状态 |
+|---------|------|------|----------|----------|
+| `/api/patient/drug/category/quick` | GET | 获取快捷分类 | 需求1.2 | ✅ 已实现 |
+| `/api/patient/drug/search/hot` | GET | 获取热门搜索 | 需求1, 需求2.2 | ✅ 已实现 |
+| `/api/patient/drug/list` | GET | 获取药品列表（首页推荐） | 需求1.4 | ⚠️ 需确认 |
 
-1. **包名**: 在 com.adinnet.demo 包下创建 mall 子包
-2. **命名规范**: 遵循现有代码的命名规范
-3. **代码注释**: 所有代码注释使用中文
-4. **文件组织**: 按照现有项目结构组织文件
-5. **资源隔离**: 所有dingdang相关资源使用`dingdang_`前缀
+### 搜索相关API
 
-### 业务约束
+| API端点 | 方法 | 功能 | 对应需求 | 实现状态 |
+|---------|------|------|----------|----------|
+| `/api/patient/drug/search/list` | GET | 搜索药品 | 需求2.3 | ✅ 已实现 |
+| `/api/patient/drug/search/history` | GET | 获取搜索历史 | 需求2.1 | ✅ 已实现 |
+| `/api/patient/drug/search/history` | DELETE | 清空搜索历史 | 需求2.6 | ✅ 已实现 |
+| `/api/patient/drug/search/hot` | GET | 获取热门搜索 | 需求2.2 | ✅ 已实现 |
 
-1. **API 对接**: 必须对接已有的后端药品商城 API
-2. **数据模型**: 使用后端 API 定义的数据模型
-3. **业务逻辑**: 遵循后端 API 的业务规则
+### 分类相关API
 
-## 优先级定义
+| API端点 | 方法 | 功能 | 对应需求 | 实现状态 |
+|---------|------|------|----------|----------|
+| `/api/patient/drug/category/list` | GET | 获取分类列表 | 需求3.1 | ✅ 已实现 |
+| `/api/patient/drug/category/drugs` | GET | 按分类查询药品 | 需求3.2 | ✅ 已实现 |
+| `/api/patient/drug/category/quick` | GET | 获取快捷分类 | 需求3.5 | ✅ 已实现 |
 
-- **P0 (必须实现)**: 需求1-6 (视觉基础、自定义组件、首页、详情页、购物车、结算)
-- **P1 (强烈建议)**: 需求7-9 (搜索、分类、底部导航)
-- **P2 (建议实现)**: 需求10 (交互动画)
+### 药品详情相关API
 
-## 验收标准清单
+| API端点 | 方法 | 功能 | 对应需求 | 实现状态 |
+|---------|------|------|----------|----------|
+| `/api/patient/drug/detail/{id}` | GET | 获取药品详情 | 需求4.1-4.3 | ✅ 已实现 |
+| `/api/patient/drug/detail/{id}/related` | GET | 获取相关推荐 | 需求4.4 | ✅ 已实现 |
 
-### 功能完整性
+### 购物车相关API
 
-- [ ] 所有 dingdang-pharmacy 的页面都已转换为 Android 实现
-- [ ] 所有核心功能都能正常工作
-- [ ] 与后端 API 对接成功
-- [ ] 页面导航流程正确
+| API端点 | 方法 | 功能 | 对应需求 | 实现状态 |
+|---------|------|------|----------|----------|
+| `/api/patient/cart/add` | POST | 添加到购物车 | 需求5.1 | ✅ 已实现 |
+| `/api/patient/cart/list` | GET | 获取购物车列表 | 需求5.2 | ✅ 已实现 |
+| `/api/patient/cart/quantity` | PUT | 更新数量 | 需求5.4 | ✅ 已实现 |
+| `/api/patient/cart/remove` | DELETE | 删除商品 | 需求5.5 | ✅ 已实现 |
+| `/api/patient/cart/select` | PUT | 选中/取消选中 | 需求5.6 | ✅ 已实现 |
+| `/api/patient/cart/selectAll` | PUT | 全选/取消全选 | 需求5.7 | ✅ 已实现 |
+| `/api/patient/cart/summary` | GET | 获取汇总信息 | 需求5.8 | ✅ 已实现 |
+| `/api/patient/cart/count` | GET | 获取购物车数量 | 需求9 | ✅ 已实现 |
+| `/api/patient/cart/batchRemove` | DELETE | 批量删除 | 需求5.5 | ✅ 已实现 |
+| `/api/patient/cart/clear` | DELETE | 清空购物车 | 需求5.10 | ✅ 已实现 |
 
-### 视觉一致性
+### 订单相关API
 
-- [ ] 视觉一致性评分 >= 75%
-- [ ] 主题色系统正确(翠绿色#10b981)
-- [ ] 圆角系统正确(3dp-9999dp)
-- [ ] 标签样式正确(快递送、自营、促销、赠品)
-- [ ] 自定义组件样式正确(DingdangTagView、DingdangCheckBox)
+| API端点 | 方法 | 功能 | 对应需求 | 实现状态 |
+|---------|------|------|----------|----------|
+| `/api/patient/order/create` | POST | 创建订单 | 需求6.4 | ✅ 已实现 |
+| `/api/patient/order/list` | GET | 获取订单列表 | 需求7.1 | ⚠️ 需确认 |
+| `/api/patient/order/detail/{id}` | GET | 获取订单详情 | 需求7.3 | ⚠️ 需确认 |
 
-### UI/UX 质量
+## 需要补充的API
 
-- [ ] UI 风格与dingdang-pharmacy高度一致
-- [ ] 页面布局美观,间距合理
-- [ ] 交互反馈及时,动画流畅
-- [ ] 适配不同屏幕尺寸
+基于UI设计分析，以下API可能需要补充或确认：
 
-### 代码质量
+1. **首页药品列表API** - 需要一个专门的首页推荐药品接口
+2. **订单列表API** - 需要确认是否已实现订单列表查询
+3. **订单详情API** - 需要确认是否已实现订单详情查询
+4. **收货地址API** - 订单创建需要收货地址管理接口
+5. **药品图片API** - 需要确认图片URL的返回格式和缩略图支持
 
-- [ ] 代码结构清晰,职责分明
-- [ ] 遵循 MVP 架构模式
-- [ ] 代码注释完整,使用中文
-- [ ] 无明显的性能问题
-- [ ] 资源隔离正确(dingdang_前缀)
+## 数据模型要求
 
-### 性能指标
+### 药品信息模型
 
-- [ ] 首页加载时间 < 2秒
-- [ ] 动画帧率 >= 55fps
-- [ ] 自定义组件绘制时间 <= 16ms
-- [ ] 内存增长 <= 10%
+```json
+{
+  "id": "药品ID",
+  "name": "药品名称",
+  "spec": "规格",
+  "price": "价格",
+  "originalPrice": "原价（用于显示折扣）",
+  "imageUrl": "图片URL",
+  "thumbnailUrl": "缩略图URL",
+  "stock": "库存",
+  "sales": "销量",
+  "categoryId": "分类ID",
+  "categoryName": "分类名称",
+  "description": "药品说明",
+  "usage": "用法用量",
+  "precautions": "注意事项"
+}
+```
 
-### 测试覆盖
+### 购物车项模型
 
-- [ ] 核心功能有单元测试
-- [ ] 关键页面有 UI 测试
-- [ ] 在多种设备上测试通过
-- [ ] 无崩溃和 ANR 问题
-- [ ] 视觉对比测试通过(一致性 >= 75%)
+```json
+{
+  "id": "购物车项ID",
+  "userId": "用户ID",
+  "drugId": "药品ID",
+  "drugName": "药品名称",
+  "drugSpec": "规格",
+  "drugImage": "药品图片",
+  "price": "单价",
+  "quantity": "数量",
+  "subtotal": "小计",
+  "isSelected": "是否选中 (0-未选中, 1-选中)",
+  "stock": "库存",
+  "createTime": "添加时间"
+}
+```
 
-## 参考资料
+### 订单模型
 
-### 源代码参考
+```json
+{
+  "orderId": "订单号",
+  "userId": "用户ID",
+  "status": "订单状态",
+  "totalAmount": "总金额",
+  "createTime": "创建时间",
+  "payTime": "支付时间",
+  "deliveryTime": "发货时间",
+  "receiveTime": "收货时间",
+  "addressInfo": {
+    "receiverName": "收货人",
+    "receiverPhone": "联系电话",
+    "province": "省",
+    "city": "市",
+    "district": "区",
+    "detailAddress": "详细地址"
+  },
+  "items": [
+    {
+      "drugId": "药品ID",
+      "drugName": "药品名称",
+      "drugSpec": "规格",
+      "drugImage": "药品图片",
+      "price": "单价",
+      "quantity": "数量",
+      "subtotal": "小计"
+    }
+  ]
+}
+```
 
-- **dingdang-pharmacy**: `dingdang-pharmacy/` 目录
-  - `App.tsx`: 主应用组件和路由
-  - `views/HomeView.tsx`: 首页实现
-  - `views/ProductDetailView.tsx`: 详情页实现
-  - `views/CartView.tsx`: 购物车实现
-  - `views/CheckoutView.tsx`: 结算页实现
-  - `types.ts`: 数据模型定义
+## 性能要求
 
-### 现有代码参考
+1. **响应时间**: 所有API的响应时间应在500ms以内
+2. **并发支持**: 系统应支持至少1000个并发用户
+3. **图片加载**: 缩略图大小应控制在50KB以内
+4. **分页大小**: 列表接口默认每页20条，最大不超过100条
+5. **缓存策略**: 分类列表、热门搜索等静态数据应使用缓存
 
-- **mshlwyy_patient**: `mshlwyy_patient/app/` 目录
-  - `src/main/java/com/adinnet/demo/activity/`: Activity 示例
-  - `src/main/java/com/adinnet/demo/fragment/`: Fragment 示例
-  - `src/main/java/com/adinnet/demo/adapter/`: Adapter 示例
-  - `src/main/res/layout/`: 布局文件示例
+## 安全要求
 
-### API 文档参考
+1. **用户认证**: 所有API需要验证用户登录状态
+2. **数据校验**: 所有输入参数需要进行合法性校验
+3. **价格保护**: 订单金额需要在服务端重新计算，不能信任客户端传值
+4. **库存校验**: 下单时需要校验库存是否充足
+5. **处方药管理**: 处方药需要上传处方并经过审核
 
-- **药品商城 API Spec**: `pharmacy-specs/backend/` 目录
-  - patient-mall-phase1-db-extension: 基础数据准备
-  - patient-mall-phase2-*: 核心查询功能
-  - patient-mall-phase3-*: 购物车功能
-  - patient-mall-phase4-*: 订单功能
-  - patient-mall-phase5-*: 物流功能
-  - patient-mall-phase6-*: 优化功能
+## 兼容性要求
 
-### 设计参考
-
-- **UI一致性分析**: `pharmacy-specs/frontend/patient-mall-ui-redesign-01/UI_CONSISTENCY_ANALYSIS.md`
-- **优化建议**: `pharmacy-specs/frontend/patient-mall-ui-redesign-01/SPEC_OPTIMIZATION_RECOMMENDATIONS.md`
-
----
-
-**文档版本:** 1.0  
-**创建日期:** 2026-01-30  
-**最后更新:** 2026-01-30
+1. **API版本**: 使用统一的API版本前缀 `/api/patient/`
+2. **数据格式**: 统一使用JSON格式
+3. **错误码**: 使用统一的错误码体系
+4. **时间格式**: 统一使用ISO 8601格式或Unix时间戳
+5. **分页参数**: 统一使用 `page` 和 `limit` 参数
